@@ -1,0 +1,15 @@
+network:
+  version: 2
+  wifis:
+    wlp5s0:
+      renderer: networkd
+      dhcp4: true
+      access-points:
+        "BITS-STUDENT":
+          auth:
+            key-management: "eap"
+            method: "peap"
+            identity: "F20240396"
+            password: "XXXXXXXXXX"
+            ca-certificate: "/etc/bits/ca.pem"
+            phase2-auth: "MSCHAPV2"

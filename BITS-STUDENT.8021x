@@ -1,0 +1,9 @@
+[Security]
+EAP-Method=PEAP
+EAP-PEAP-Phase2-Identity=F20240396
+EAP-PEAP-Phase2-Password=XXXXXXXXXX
+EAP-PEAP-CACert=/etc/bits/ca.pem
+EAP-PEAP-Phase2-Method=MSCHAPV2
+
+[Settings]
+AutoConnect=true
