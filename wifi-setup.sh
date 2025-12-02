@@ -28,7 +28,7 @@ cd /etc/bits
 
 $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/login > login
 chmod 700 login
-sed -i -e "44s/.*/USERNAME=\"$USERNAME\"/" -e "45s/.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" login
+sed -i -e "s/^USERNAME=.*/USERNAME=\"$USERNAME\"/" -e "s/^PASSWORD=.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" login
 echo "/etc/bits/login created."
 
 if [ -d "/etc/NetworkManager" ]; then DIR='/etc/NetworkManager/dispatcher.d'
@@ -66,7 +66,7 @@ if [ -d "/etc/NetworkManager" ]; then
   if [ ! -d "/etc/netplan" ]; then
     $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.nmconnection > /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
     chmod 600 /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
-    sed -i -e "15s/.*/identity=$USERNAME/" -e "16s/.*/password=$PASSWORD/" /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
+    sed -i -e "s/^identity=.*/identity=$USERNAME/" -e "s/^password=.*/password=$PASSWORD/" /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
     nmcli connection reload
     exit
   fi
@@ -76,9 +76,9 @@ if [ -d "/etc/netplan" ]; then
   echo "Netplan found."
   $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/99-config.yaml > /etc/netplan/99-config.yaml
   chmod 600 /etc/netplan/99-config.yaml
-  sed -i -e "4s/.*/    $DEV:/" -e "12s/.*/            identity: \"$USERNAME\"/" -e "13s/.*/            password: \"$PASSWORD\"/" /etc/netplan/99-config.yaml
+  sed -i -e "s/wlp5s0/$DEV/" -e "s/identity:.*/identity: \"$USERNAME\"/" -e "s/password:.*/password: \"$PASSWORD\"/" /etc/netplan/99-config.yaml
   if [ -d "/etc/NetworkManager" ]; then
-    sed -i -e "5s/.*/      renderer: NetworkManager/" -e "15s/.*/            phase2-auth: \"mschapv2\"/" /etc/netplan/99-config.yaml
+    sed -i -e "s/renderer:.*/renderer: NetworkManager/" -e "s/phase2-auth:.*/phase2-auth: \"mschapv2\"/" /etc/netplan/99-config.yaml
   elif [ -d "/etc/networkd-dispatcher" ]; then
     systemctl enable --now systemd-networkd.service
     systemctl enable --now systemd-networkd.socket
@@ -95,7 +95,7 @@ if [ -d "/var/lib/iwd" ]; then
   echo "iwd found."
   $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.8021x > /var/lib/iwd/BITS-STUDENT.8021x
   chmod 600 /var/lib/iwd/BITS-STUDENT.8021x
-  sed -i -e "3s/.*/EAP-PEAP-Phase2-Identity=$USERNAME/" -e "4s/.*/EAP-PEAP-Phase2-Password=$PASSWORD/" /var/lib/iwd/BITS-STUDENT.8021x
+  sed -i -e "s/^EAP-PEAP-Phase2-Identity=.*/EAP-PEAP-Phase2-Identity=$USERNAME/" -e "s/^EAP-PEAP-Phase2-Password=.*/EAP-PEAP-Phase2-Password=$PASSWORD/" /var/lib/iwd/BITS-STUDENT.8021x
   if [ -d "/run/systemd/system" ]; then
     systemctl disable --now wpa_supplicant.service
     systemctl disable --now wpa_supplicant@$DEV.service
@@ -115,7 +115,7 @@ if [ -d "/etc/wpa_supplicant" ]; then
   if [ -d "/run/systemd/system" ]; then SUFFIX="-$DEV"; fi
   $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/wpa_supplicant.conf >> /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
   chmod 600 /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
-  sed -i -e "5s/.*/  identity=\"$USERNAME\"/" -e "6s/.*/  password=\"$PASSWORD\"/" /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
+  sed -i -e "s/identity=.*/identity=\"$USERNAME\"/" -e "s/password=.*/password=\"$PASSWORD\"/" /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
   if [ -d "/run/systemd/system" ]; then
     systemctl disable --now wpa_supplicant.service
     systemctl enable --now wpa_supplicant@$DEV.service
