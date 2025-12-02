@@ -28,7 +28,7 @@ cd /etc/bits
 
 $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/login > login
 chmod 700 login
-sed -i -e "44s/.*/USERNAME=\"$USERNAME\"/" -e "45s/.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" login
+sed -i -e "s/^USERNAME=.*/USERNAME=\"$USERNAME\"/" -e "s/^PASSWORD=.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" login
 echo "/etc/bits/login created."
 
 if [ -d "/etc/NetworkManager" ]; then DIR='/etc/NetworkManager/dispatcher.d'
