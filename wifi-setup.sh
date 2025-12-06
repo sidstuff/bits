@@ -24,27 +24,29 @@ urlencode() { # Passwords can contain ampersands, etc.
 }
 
 mkdir /etc/bits
-cd /etc/bits
+cd $(dirname $0)
 
-$CMD $FLAGS https://github.com/sidstuff/bits/raw/master/login > login
-chmod 700 login
-sed -i -e "s/^USERNAME=.*/USERNAME=\"$USERNAME\"/" -e "s/^PASSWORD=.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" login
+[ -f "login" ] && cp login /etc/bits/ \
+               || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/login > /etc/bits/login
+chmod 700 /etc/bits/login
+sed -i -e "s/^USERNAME=.*/USERNAME=\"$USERNAME\"/" -e "s/^PASSWORD=.*/PASSWORD=\"$(urlencode "$PASSWORD")\"/" /etc/bits/login
 echo "/etc/bits/login created."
 
 if [ -d "/etc/NetworkManager" ]; then DIR='/etc/NetworkManager/dispatcher.d'
 elif [ -d "/etc/networkd-dispatcher" ]; then DIR='/etc/networkd-dispatcher/routable.d'
 elif [ -d "/etc/network" ]; then DIR='/etc/network/if-up.d'
 fi
-if [ "$DIR" ] && cp login $DIR/; then
+if [ "$DIR" ] && cp /etc/bits/login $DIR/; then
   echo -e '#!/bin/sh\n\n{ sleep 5; exec /etc/bits/login > /dev/null; } &\nexit' > $DIR/login
   chmod +x $DIR/login
   echo "Auto-login script $DIR/login created."
 else
   echo "Unable to setup auto-login as the required directories were not found." >&2
 fi
-
-# $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/Wifi_certificate.pfx | openssl pkcs12 -passin pass:1 -cacerts -nokeys -out ca.pem
-$CMD $FLAGS https://github.com/sidstuff/bits/raw/master/ca.pem > ca.pem
+                 # openssl pkcs12 -in Wifi_certificate.pfx -passin pass:1 -cacerts -nokeys -out /etc/bits/ca.pem
+[ -f "ca.pem" ] && cp ca.pem /etc/bits/ \
+                || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/ca.pem > /etc/bits/ca.pem
+                 # $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/Wifi_certificate.pfx | openssl pkcs12 -passin pass:1 -cacerts -nokeys -out /etc/bits/ca.pem
 echo "/etc/bits/ca.pem created."
 
 DEV=$(ip --brief l | awk '{print $1}' | grep -m1 ^w)
@@ -64,7 +66,8 @@ if [ -d "/etc/NetworkManager" ]; then
     rc-service NetworkManager start
   fi
   if [ ! -d "/etc/netplan" ]; then
-    $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.nmconnection > /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
+    [ -f BITS-STUDENT.nmconnection ] && cp BITS-STUDENT.nmconnection /etc/NetworkManager/system-connections/ \
+                                     || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.nmconnection > /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
     chmod 600 /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
     sed -i -e "s/^identity=.*/identity=$USERNAME/" -e "s/^password=.*/password=$PASSWORD/" /etc/NetworkManager/system-connections/BITS-STUDENT.nmconnection
     nmcli connection reload
@@ -74,7 +77,8 @@ fi
 
 if [ -d "/etc/netplan" ]; then
   echo "Netplan found."
-  $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/99-config.yaml > /etc/netplan/99-config.yaml
+  [ -f "99-config.yaml" ] && cp 99-config.yaml /etc/netplan/ \
+                          || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/99-config.yaml > /etc/netplan/99-config.yaml
   chmod 600 /etc/netplan/99-config.yaml
   sed -i -e "s/wlp5s0/$DEV/" -e "s/identity:.*/identity: \"$USERNAME\"/" -e "s/password:.*/password: \"$PASSWORD\"/" /etc/netplan/99-config.yaml
   if [ -d "/etc/NetworkManager" ]; then
@@ -93,7 +97,8 @@ fi
 
 if [ -d "/var/lib/iwd" ]; then
   echo "iwd found."
-  $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.8021x > /var/lib/iwd/BITS-STUDENT.8021x
+  [ -f "BITS-STUDENT.8021x" ] && cp BITS-STUDENT.8021x /var/lib/iwd/ \
+                              || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/BITS-STUDENT.8021x > /var/lib/iwd/BITS-STUDENT.8021x
   chmod 600 /var/lib/iwd/BITS-STUDENT.8021x
   sed -i -e "s/^EAP-PEAP-Phase2-Identity=.*/EAP-PEAP-Phase2-Identity=$USERNAME/" -e "s/^EAP-PEAP-Phase2-Password=.*/EAP-PEAP-Phase2-Password=$PASSWORD/" /var/lib/iwd/BITS-STUDENT.8021x
   if [ -d "/run/systemd/system" ]; then
@@ -113,7 +118,8 @@ fi
 if [ -d "/etc/wpa_supplicant" ]; then
   echo "wpa_supplicant found."
   if [ -d "/run/systemd/system" ]; then SUFFIX="-$DEV"; fi
-  $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/wpa_supplicant.conf >> /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
+  [ -f "wpa_supplicant.conf" ] && cp wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf \
+                               || $CMD $FLAGS https://github.com/sidstuff/bits/raw/master/wpa_supplicant.conf >> /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
   chmod 600 /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
   sed -i -e "s/identity=.*/identity=\"$USERNAME\"/" -e "s/password=.*/password=\"$PASSWORD\"/" /etc/wpa_supplicant/wpa_supplicant$SUFFIX.conf
   if [ -d "/run/systemd/system" ]; then
