@@ -3,10 +3,11 @@
 ### Requirements
 
 * Bash
-* iproute2 and iw
+* iproute2
 * either wpa_supplicant or iwd
-* (for auto-login) any one of NetworkManager, systemd-networkd, or ifupdown
+* (optional) iw
 * (optional) Netplan
+* (for auto-login) any one of NetworkManager, systemd-networkd, or ifupdown
 
 ### Initial setup
 
@@ -19,8 +20,10 @@ su -c "bash <(curl -fsSL https://github.com/sidstuff/bits/raw/master/wifi-setup.
 ```
 while connected to another network. If no root password is set but sudo is available, prefix the above command with `sudo`.
 
+If another network is not available, open a saved copy of this repo and run `bash /path/to/bits/wifi-setup.sh` as root.
+
 > [!NOTE]
-> If you have already setup Wi-Fi and only want to automate the login, replace `wifi-setup.sh` in the above command with `login-setup.sh`.
+> If you have already setup Wi-Fi and only want to automate the login, replace `wifi-setup.sh` in the above commands with `login-setup.sh`.
 
 ### Login
 
